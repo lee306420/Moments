@@ -1,16 +1,38 @@
-# my_flutter_app
+这是一个基于Flutter开发的"朋友圈"应用。以下是该应用的介绍：
 
-A new Flutter project.
+## 朋友圈(Moments)应用介绍
 
-## Getting Started
+这是一款基于Flutter开发的朋友圈应用，允许用户分享图片和文字内容。类似于微信朋友圈的功能，用户可以发布动态、浏览他人动态、评论等。
 
-This project is a starting point for a Flutter application.
+### 主要功能：
 
-A few resources to get you started if this is your first Flutter project:
+1. **动态发布**：用户可以创建新的动态，支持文字内容和多张图片
+2. **动态浏览**：在主界面浏览所有朋友圈动态
+3. **时间筛选**：可按日期或月份筛选动态内容
+4. **搜索功能**：支持搜索动态内容
+5. **评论互动**：对动态进行评论
+6. **图片预览**：支持图片放大预览
+7. **设置管理**：用户可以管理应用设置
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 技术特点：
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. **Flutter框架**：使用Flutter开发，支持iOS和Android跨平台
+2. **Provider状态管理**：采用Provider进行应用状态管理
+3. **本地存储**：数据存储在本地JSON文件中
+4. **多语言支持**：预设了中文和英文支持
+5. **现代UI设计**：采用了现代化的UI设计风格，包括卡片式布局、精美主题颜色
+6. **图片处理**：使用image_picker、photo_view等库处理图片选择和预览
+7. **权限管理**：管理设备存储权限
+8. **数据持久化**：使用shared_preferences存储用户设置
+
+### 文件结构：
+
+- **models/**: 包含数据模型定义（如Moment和Comment类）
+- **screens/**: 应用的各个页面（朋友圈主页、详情页、发布页等）
+- **providers/**: 状态管理相关代码
+- **services/**: 数据服务层，处理数据的读写
+- **widgets/**: 可复用的UI组件
+- **utils/**: 工具类和辅助函数
+
+这款应用在UI设计上采用了精美的主题配色，交互流畅，功能较为完善，适合作为社交类应用的基础框架或学习Flutter开发的参考项目。
+
