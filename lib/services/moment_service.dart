@@ -151,18 +151,19 @@ class MomentService {
     await _saveToJson();
   }
 
-  Future<void> toggleLike(String momentId) async {
+  Future<void> removeComment(String momentId, String commentId) async {
     await _ensureInitialized();
 
     final momentIndex = _moments.indexWhere((m) => m.id == momentId);
     if (momentIndex < 0) {
       if (kDebugMode) {
-        print('点赞失败: 动态ID $momentId 不存在');
+        print('删除评论失败: 动态ID $momentId 不存在');
       }
       return;
     }
 
-    _moments[momentIndex].likes += 1;
+    // 查找评论
+    _moments[momentIndex].comments.removeWhere((c) => c.id == commentId);
 
     // 保存到JSON
     await _saveToJson();
@@ -233,7 +234,6 @@ class MomentService {
       'content': moment.content,
       'imagePaths': moment.imagePaths,
       'createTime': moment.createTime.toIso8601String(),
-      'likes': moment.likes,
       'comments': moment.comments.map((c) => _commentToJson(c)).toList(),
       'authorName': moment.authorName,
       'authorAvatar': moment.authorAvatar,
@@ -262,7 +262,6 @@ class MomentService {
       content: json['content'] as String,
       imagePaths: (json['imagePaths'] as List<dynamic>).cast<String>(),
       createTime: DateTime.parse(json['createTime'] as String),
-      likes: json['likes'] as int,
       comments: commentsList,
       authorName: json['authorName'] as String,
       authorAvatar: json['authorAvatar'] as String?,

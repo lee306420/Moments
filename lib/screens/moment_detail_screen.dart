@@ -343,59 +343,6 @@ class _MomentDetailScreenState extends State<MomentDetailScreen> {
                           ),
                         ),
 
-                      // 点赞数
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: Card(
-                            elevation: 0,
-                            color: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                              side: BorderSide(
-                                color: AppTheme.primaryColor.withOpacity(0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 4.0,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.favorite,
-                                      color: AppTheme.accentColor,
-                                      size: 20,
-                                    ),
-                                    constraints: const BoxConstraints(),
-                                    padding: const EdgeInsets.all(4),
-                                    onPressed: () {
-                                      Provider.of<MomentProvider>(context,
-                                              listen: false)
-                                          .likeMoment(moment.id);
-                                    },
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${moment.likes}',
-                                    style: const TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
                       // 评论分割线和标题
                       Container(
                         margin: const EdgeInsets.only(top: 16.0),

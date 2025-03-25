@@ -204,19 +204,6 @@ class MomentCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(width: 16),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {
-                Provider.of<MomentProvider>(context, listen: false)
-                    .likeMoment(moment.id);
-              },
-            ),
-            Text('${moment.likes}'),
-          ],
-        ),
       ],
     );
   }

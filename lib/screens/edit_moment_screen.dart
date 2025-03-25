@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../models/moment.dart';
 import '../providers/moment_provider.dart';
 import '../main.dart';
@@ -39,9 +41,19 @@ class _EditMomentScreenState extends State<EditMomentScreen> {
 
   void _checkForChanges() {
     final contentChanged = _contentController.text != widget.moment.content;
-    final imagesChanged = _imagePaths.length !=
-            widget.moment.imagePaths.length ||
-        !_imagePaths.every((path) => widget.moment.imagePaths.contains(path));
+
+    // 检查图片数量或顺序是否有变化
+    bool imagesChanged = _imagePaths.length != widget.moment.imagePaths.length;
+
+    // 如果数量相同，检查顺序是否有变化
+    if (!imagesChanged && _imagePaths.isNotEmpty) {
+      for (int i = 0; i < _imagePaths.length; i++) {
+        if (_imagePaths[i] != widget.moment.imagePaths[i]) {
+          imagesChanged = true;
+          break;
+        }
+      }
+    }
 
     setState(() {
       _hasChanges = contentChanged || imagesChanged;
@@ -249,15 +261,28 @@ class _EditMomentScreenState extends State<EditMomentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '图片',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '图片',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              '拖拽可调整顺序',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        GridView.builder(
+                        ReorderableGridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
@@ -270,6 +295,7 @@ class _EditMomentScreenState extends State<EditMomentScreen> {
                           itemCount: _imagePaths.length,
                           itemBuilder: (context, index) {
                             return Stack(
+                              key: ValueKey(_imagePaths[index]),
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(
@@ -300,7 +326,50 @@ class _EditMomentScreenState extends State<EditMomentScreen> {
                                     ),
                                   ),
                                 ),
+                                Positioned(
+                                  left: 4,
+                                  top: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.drag_indicator,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
                               ],
+                            );
+                          },
+                          onReorder: (oldIndex, newIndex) {
+                            // 提供触觉反馈
+                            HapticFeedback.mediumImpact();
+
+                            setState(() {
+                              if (oldIndex < newIndex) {
+                                newIndex -= 1;
+                              }
+                              final item = _imagePaths.removeAt(oldIndex);
+                              _imagePaths.insert(newIndex, item);
+                              _checkForChanges();
+                            });
+                          },
+                          dragWidgetBuilder: (index, child) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: child,
                             );
                           },
                         ),

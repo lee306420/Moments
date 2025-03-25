@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:intl/intl.dart';
 import '../models/moment.dart';
 import '../screens/moment_detail_screen.dart';
@@ -242,16 +241,6 @@ class SearchResultCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.favorite, size: 16, color: Colors.red.shade300),
-            const SizedBox(width: 4),
-            Text(
-              '${moment.likes}',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(width: 16),
             Icon(Icons.comment, size: 16, color: Colors.blue.shade300),
             const SizedBox(width: 4),
             Text(

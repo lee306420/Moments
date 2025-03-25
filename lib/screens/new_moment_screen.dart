@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../providers/moment_provider.dart';
 import '../utils/image_utils.dart';
 import '../utils/path_display_util.dart';
@@ -174,9 +176,22 @@ class _NewMomentScreenState extends State<NewMomentScreen> {
               ),
               const SizedBox(height: 16),
               if (_selectedImages.isNotEmpty) ...[
-                const Text('已选择的图片:'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('已选择的图片:'),
+                    Text(
+                      '拖拽可调整顺序',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
-                GridView.builder(
+                ReorderableGridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -187,6 +202,7 @@ class _NewMomentScreenState extends State<NewMomentScreen> {
                   itemCount: _selectedImages.length,
                   itemBuilder: (ctx, index) {
                     return Stack(
+                      key: ValueKey(_selectedImages[index].path),
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
@@ -216,7 +232,49 @@ class _NewMomentScreenState extends State<NewMomentScreen> {
                             ),
                           ),
                         ),
+                        Positioned(
+                          left: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.drag_indicator,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
                       ],
+                    );
+                  },
+                  onReorder: (oldIndex, newIndex) {
+                    // 提供触觉反馈
+                    HapticFeedback.mediumImpact();
+
+                    setState(() {
+                      if (oldIndex < newIndex) {
+                        newIndex -= 1;
+                      }
+                      final item = _selectedImages.removeAt(oldIndex);
+                      _selectedImages.insert(newIndex, item);
+                    });
+                  },
+                  dragWidgetBuilder: (index, child) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: child,
                     );
                   },
                 ),

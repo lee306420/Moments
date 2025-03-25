@@ -110,7 +110,6 @@ class JsonMomentService {
       'content': moment.content,
       'imagePaths': relativePaths, // 使用相对路径存储
       'createTime': moment.createTime.toIso8601String(),
-      'likes': moment.likes,
       'comments':
           await Future.wait(moment.comments.map((c) => _commentToJson(c))),
       'authorName': moment.authorName,
@@ -148,7 +147,6 @@ class JsonMomentService {
       content: json['content'] as String,
       imagePaths: absolutePaths, // 使用绝对路径
       createTime: DateTime.parse(json['createTime'] as String),
-      likes: json['likes'] as int,
       comments: commentsList,
       authorName: json['authorName'] as String,
       authorAvatar: json['authorAvatar'] as String?,
@@ -327,19 +325,6 @@ class JsonMomentService {
         // 保存到JSON
         await _saveToJson();
       }
-    }
-  }
-
-  /// 点赞
-  Future<void> toggleLike(String momentId) async {
-    await _ensureInitialized();
-
-    final momentIndex = _moments.indexWhere((m) => m.id == momentId);
-    if (momentIndex >= 0) {
-      _moments[momentIndex].likes += 1;
-
-      // 保存到JSON
-      await _saveToJson();
     }
   }
 

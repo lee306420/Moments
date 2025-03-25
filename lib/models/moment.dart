@@ -3,7 +3,6 @@ class Moment {
   String content;
   List<String> imagePaths;
   DateTime createTime;
-  int likes;
   List<Comment> comments;
   String authorName;
   String? authorAvatar;
@@ -13,7 +12,6 @@ class Moment {
     required this.content,
     required this.imagePaths,
     required this.createTime,
-    this.likes = 0,
     List<Comment>? comments,
     required this.authorName,
     this.authorAvatar,

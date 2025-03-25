@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/moment_provider.dart';
 import '../widgets/moment_card.dart';
+import '../widgets/month_picker_dialog.dart';
 import 'new_moment_screen.dart';
 import 'settings_screen.dart';
 import 'search_screen.dart';
@@ -59,6 +60,84 @@ class _MomentsScreenState extends State<MomentsScreen> {
     }
   }
 
+  // 显示月份选择器
+  Future<void> _showMonthPicker(BuildContext context) async {
+    final momentProvider = Provider.of<MomentProvider>(context, listen: false);
+    final DateTime now = DateTime.now();
+    final DateTime initialDate = momentProvider.selectedMonth ?? now;
+
+    // 使用自定义月份选择器
+    final DateTime? pickedDate = await MonthPickerDialog.show(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: now,
+    );
+
+    if (pickedDate != null) {
+      momentProvider.filterByMonth(pickedDate);
+    }
+  }
+
+  // 显示筛选选项对话框
+  void _showFilterOptions(BuildContext context) {
+    final momentProvider = Provider.of<MomentProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  '选择筛选方式',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.calendar_today, color: Colors.blue),
+                title: const Text('按日期筛选'),
+                subtitle: const Text('查看特定日期发布的动态'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDatePicker(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.date_range, color: Colors.green),
+                title: const Text('按月份筛选'),
+                subtitle: const Text('查看整个月份发布的动态'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showMonthPicker(context);
+                },
+              ),
+              if (momentProvider.isFiltering || momentProvider.isMonthFiltering)
+                ListTile(
+                  leading: const Icon(Icons.clear_all, color: Colors.red),
+                  title: const Text('清除所有筛选'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    momentProvider.clearAllFilters();
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,12 +158,14 @@ class _MomentsScreenState extends State<MomentsScreen> {
             builder: (ctx, momentProvider, _) {
               return IconButton(
                 icon: Icon(
-                  Icons.calendar_month,
-                  color:
-                      momentProvider.isFiltering ? Colors.blue : Colors.black,
+                  Icons.filter_alt,
+                  color: (momentProvider.isFiltering ||
+                          momentProvider.isMonthFiltering)
+                      ? Colors.blue
+                      : Colors.black,
                 ),
-                onPressed: () => _showDatePicker(context),
-                tooltip: '按日期筛选',
+                onPressed: () => _showFilterOptions(context),
+                tooltip: '筛选动态',
               );
             },
           ),
@@ -107,40 +188,76 @@ class _MomentsScreenState extends State<MomentsScreen> {
             // 显示筛选状态
             Consumer<MomentProvider>(
               builder: (ctx, momentProvider, _) {
-                if (!momentProvider.isFiltering) {
+                if (!momentProvider.isFiltering &&
+                    !momentProvider.isMonthFiltering) {
                   return const SizedBox.shrink();
                 }
 
-                final dateStr = DateFormat('yyyy年MM月dd日')
-                    .format(momentProvider.selectedDate!);
+                String filterInfo = '';
+                Color backgroundColor = Colors.blue.shade50;
+                IconData iconData = Icons.calendar_today;
+
+                if (momentProvider.isFiltering) {
+                  final dateStr = DateFormat('yyyy年MM月dd日')
+                      .format(momentProvider.selectedDate!);
+                  filterInfo = '当前显示 $dateStr 的动态';
+                } else if (momentProvider.isMonthFiltering) {
+                  final monthStr = DateFormat('yyyy年MM月')
+                      .format(momentProvider.selectedMonth!);
+                  filterInfo = '当前显示 $monthStr 的动态';
+                  backgroundColor = Colors.green.shade50;
+                  iconData = Icons.date_range;
+                }
 
                 return Container(
-                  color: Colors.blue.shade50,
+                  color: backgroundColor,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
+                      Icon(iconData,
+                          size: 16,
+                          color: momentProvider.isFiltering
+                              ? Colors.blue
+                              : Colors.green),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '当前显示 $dateStr 的动态',
-                          style: const TextStyle(color: Colors.blue),
+                          filterInfo,
+                          style: TextStyle(
+                            color: momentProvider.isFiltering
+                                ? Colors.blue
+                                : Colors.green,
+                          ),
                         ),
                       ),
                       InkWell(
                         onTap: () {
-                          momentProvider.clearDateFilter();
+                          if (momentProvider.isFiltering) {
+                            momentProvider.clearDateFilter();
+                          } else if (momentProvider.isMonthFiltering) {
+                            momentProvider.clearMonthFilter();
+                          }
                         },
-                        child: const Row(
+                        child: Row(
                           children: [
                             Text(
                               '清除筛选',
                               style: TextStyle(
-                                color: Colors.blue,
+                                color: momentProvider.isFiltering
+                                    ? Colors.blue
+                                    : Colors.green,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(width: 4),
-                            Icon(Icons.close, size: 16, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.close,
+                              size: 16,
+                              color: momentProvider.isFiltering
+                                  ? Colors.blue
+                                  : Colors.green,
+                            ),
                           ],
                         ),
                       ),
@@ -159,22 +276,35 @@ class _MomentsScreenState extends State<MomentsScreen> {
                   }
 
                   if (momentProvider.moments.isEmpty) {
-                    if (momentProvider.isFiltering) {
+                    if (momentProvider.isFiltering ||
+                        momentProvider.isMonthFiltering) {
                       // 筛选状态下无内容显示
-                      final dateStr = DateFormat('yyyy年MM月dd日')
-                          .format(momentProvider.selectedDate!);
+                      String dateInfo = '';
+                      IconData iconData = Icons.calendar_today;
+                      Color iconColor = Colors.blue;
+
+                      if (momentProvider.isFiltering) {
+                        dateInfo = DateFormat('yyyy年MM月dd日')
+                            .format(momentProvider.selectedDate!);
+                      } else {
+                        dateInfo = DateFormat('yyyy年MM月')
+                            .format(momentProvider.selectedMonth!);
+                        iconData = Icons.date_range;
+                        iconColor = Colors.green;
+                      }
+
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.calendar_today,
+                              iconData,
                               size: 80,
                               color: Colors.grey.shade300,
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              '$dateStr 没有动态内容',
+                              '$dateInfo 没有动态内容',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey.shade600,
@@ -185,11 +315,11 @@ class _MomentsScreenState extends State<MomentsScreen> {
                               icon: const Icon(Icons.refresh),
                               label: const Text('查看全部动态'),
                               onPressed: () {
-                                momentProvider.clearDateFilter();
+                                momentProvider.clearAllFilters();
                               },
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.blue,
-                                backgroundColor: Colors.blue.withOpacity(0.1),
+                                foregroundColor: iconColor,
+                                backgroundColor: iconColor.withOpacity(0.1),
                               ),
                             ),
                           ],

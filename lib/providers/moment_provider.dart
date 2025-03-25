@@ -9,12 +9,20 @@ class MomentProvider extends ChangeNotifier {
   List<Moment> _filteredMoments = [];
   bool _isLoading = false;
   DateTime? _selectedDate;
+  DateTime? _selectedMonth;
   bool _isFiltering = false;
+  bool _isMonthFiltering = false;
 
-  List<Moment> get moments => _isFiltering ? _filteredMoments : _moments;
+  List<Moment> get moments => _isFiltering
+      ? _filteredMoments
+      : _isMonthFiltering
+          ? _filteredMoments
+          : _moments;
   bool get isLoading => _isLoading;
   DateTime? get selectedDate => _selectedDate;
+  DateTime? get selectedMonth => _selectedMonth;
   bool get isFiltering => _isFiltering;
+  bool get isMonthFiltering => _isMonthFiltering;
 
   Future<void> loadMoments() async {
     _isLoading = true;
@@ -25,8 +33,11 @@ class MomentProvider extends ChangeNotifier {
     // 如果正在筛选，更新筛选后的结果
     if (_isFiltering && _selectedDate != null) {
       _applyDateFilter(_selectedDate!);
+    } else if (_isMonthFiltering && _selectedMonth != null) {
+      _applyMonthFilter(_selectedMonth!);
     } else {
       _isFiltering = false;
+      _isMonthFiltering = false;
       _filteredMoments = [];
     }
 
@@ -45,9 +56,34 @@ class MomentProvider extends ChangeNotifier {
       return;
     }
 
+    // 清除月份筛选
+    _isMonthFiltering = false;
+    _selectedMonth = null;
+
     _selectedDate = date;
     _isFiltering = true;
     _applyDateFilter(date);
+    notifyListeners();
+  }
+
+  // 按月份筛选动态
+  void filterByMonth(DateTime? month) {
+    if (month == null) {
+      // 清除筛选
+      _isMonthFiltering = false;
+      _selectedMonth = null;
+      _filteredMoments = [];
+      notifyListeners();
+      return;
+    }
+
+    // 清除日期筛选
+    _isFiltering = false;
+    _selectedDate = null;
+
+    _selectedMonth = month;
+    _isMonthFiltering = true;
+    _applyMonthFilter(month);
     notifyListeners();
   }
 
@@ -67,10 +103,41 @@ class MomentProvider extends ChangeNotifier {
     }).toList();
   }
 
+  // 应用月份筛选
+  void _applyMonthFilter(DateTime month) {
+    // 获取所选月份的年、月
+    final year = month.year;
+    final monthNum = month.month;
+
+    // 筛选出同一月的动态
+    _filteredMoments = _moments.where((moment) {
+      final momentDate = moment.createTime;
+      return momentDate.year == year && momentDate.month == monthNum;
+    }).toList();
+  }
+
   // 清除日期筛选
   void clearDateFilter() {
     _isFiltering = false;
     _selectedDate = null;
+    _filteredMoments = [];
+    notifyListeners();
+  }
+
+  // 清除月份筛选
+  void clearMonthFilter() {
+    _isMonthFiltering = false;
+    _selectedMonth = null;
+    _filteredMoments = [];
+    notifyListeners();
+  }
+
+  // 清除所有筛选
+  void clearAllFilters() {
+    _isFiltering = false;
+    _isMonthFiltering = false;
+    _selectedDate = null;
+    _selectedMonth = null;
     _filteredMoments = [];
     notifyListeners();
   }
@@ -114,7 +181,6 @@ class MomentProvider extends ChangeNotifier {
       content: content,
       imagePaths: imagePaths ?? originalMoment.imagePaths,
       createTime: originalMoment.createTime,
-      likes: originalMoment.likes,
       comments: originalMoment.comments,
       authorName: originalMoment.authorName,
       authorAvatar: originalMoment.authorAvatar,
@@ -122,11 +188,6 @@ class MomentProvider extends ChangeNotifier {
 
     // 更新动态
     await _momentService.updateMoment(updatedMoment);
-    await loadMoments(); // 重新加载数据
-  }
-
-  Future<void> likeMoment(String momentId) async {
-    await _momentService.toggleLike(momentId);
     await loadMoments(); // 重新加载数据
   }
 

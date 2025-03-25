@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/moment.dart';
 import '../main.dart'; // 导入主题
 
@@ -70,9 +71,9 @@ class CommentsList extends StatelessWidget {
       itemBuilder: (context, index) {
         final comment = comments[index];
 
-        // 只有用户自己的评论才可以左滑操作
+        // 只有用户自己的评论才可以操作
         if (comment.isCurrentUser) {
-          return _buildDismissibleCommentItem(context, comment);
+          return _buildSlidableCommentItem(context, comment);
         } else {
           return _buildCommentItem(comment);
         }
@@ -80,54 +81,34 @@ class CommentsList extends StatelessWidget {
     );
   }
 
-  // 构建可左滑的评论项
-  Widget _buildDismissibleCommentItem(BuildContext context, Comment comment) {
-    return Dismissible(
-      key: Key(comment.id),
-      background: Container(
-        color: AppTheme.secondaryColor,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Row(
-          children: [
-            Icon(Icons.edit, color: Colors.white),
-            SizedBox(width: 8),
-            Text('编辑',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
+  // 构建可滑动的评论项
+  Widget _buildSlidableCommentItem(BuildContext context, Comment comment) {
+    return Slidable(
+      key: ValueKey(comment.id),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) => _showEditDialog(context, comment),
+            backgroundColor: AppTheme.secondaryColor,
+            foregroundColor: Colors.white,
+            icon: Icons.edit,
+            label: '编辑',
+          ),
+          SlidableAction(
+            onPressed: (context) async {
+              final confirmed = await _showDeleteConfirmationDialog(context);
+              if (confirmed && onDelete != null) {
+                onDelete!(comment.id);
+              }
+            },
+            backgroundColor: AppTheme.error,
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: '删除',
+          ),
+        ],
       ),
-      secondaryBackground: Container(
-        color: AppTheme.error,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text('删除',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            SizedBox(width: 8),
-            Icon(Icons.delete, color: Colors.white),
-          ],
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          // 编辑操作
-          _showEditDialog(context, comment);
-          return false; // 不真正删除列表项
-        } else {
-          // 删除操作
-          return await _showDeleteConfirmationDialog(context);
-        }
-      },
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart && onDelete != null) {
-          onDelete!(comment.id);
-        }
-      },
       child: _buildCommentItem(comment),
     );
   }
