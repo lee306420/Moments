@@ -29,6 +29,7 @@ class AppTheme {
   static const Color dividerColor = Color(0xFFEEEEEE);
   static const Color success = Color(0xFF66BB6A);
   static const Color error = Color(0xFFEF5350);
+  static const Color warning = Color(0xFFFFB74D); // 琥珀色警告
 
   // 圆角大小
   static const double borderRadius = 12.0;

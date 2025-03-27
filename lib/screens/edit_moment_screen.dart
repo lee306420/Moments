@@ -112,31 +112,53 @@ class _EditMomentScreenState extends State<EditMomentScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
     try {
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
+      final pickedFiles = await ImageUtils.pickImagesWithWechat(context);
 
-      if (pickedFile != null) {
+      if (pickedFiles.isNotEmpty) {
+        // 限制总数量不超过9张
+        final availableSlots = 9 - _imagePaths.length;
+        final filesToProcess = pickedFiles.length > availableSlots
+            ? pickedFiles.sublist(0, availableSlots)
+            : pickedFiles;
+
+        // 显示加载指示器
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('正在处理图片...'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+
         // 保存图片到应用存储
-        final savedImagePath = await ImageUtils.saveImageToLocal(
-          File(pickedFile.path),
-        );
+        final savedImagePaths =
+            await ImageUtils.saveImagesToLocal(filesToProcess);
 
         setState(() {
-          _imagePaths.add(savedImagePath);
+          _imagePaths.addAll(savedImagePaths);
           _checkForChanges();
         });
+
+        if (mounted && pickedFiles.length > availableSlots) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('已达到最大图片数量限制（9张）'),
+              backgroundColor: AppTheme.warning,
+            ),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('选择图片失败: $e'),
-          backgroundColor: AppTheme.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('选择图片失败: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
     }
   }
 

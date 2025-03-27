@@ -40,6 +40,9 @@ dependencies:
   # 图片选择器
   image_picker: ^1.1.2
   
+  # 微信风格资源选择器
+  wechat_assets_picker: ^9.5.0
+  
   # 文件路径
   path_provider: ^2.1.1
   

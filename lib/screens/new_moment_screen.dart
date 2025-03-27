@@ -27,11 +27,35 @@ class _NewMomentScreenState extends State<NewMomentScreen> {
   }
 
   Future<void> _pickImages() async {
-    final pickedImages = await ImageUtils.pickImages();
-    if (pickedImages.isNotEmpty) {
-      setState(() {
-        _selectedImages.addAll(pickedImages);
-      });
+    try {
+      // 计算还可以选择多少张图片
+      final maxImages = 9;
+      final remainingSlots = maxImages - _selectedImages.length;
+
+      if (remainingSlots <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('最多只能选择9张图片')),
+        );
+        return;
+      }
+
+      // 使用微信风格的选择器
+      final pickedImages = await ImageUtils.pickImagesWithWechat(context,
+          maxAssets: remainingSlots);
+
+      if (pickedImages.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(pickedImages);
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('选择图片失败: $e');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('选择图片失败: $e')),
+      );
     }
   }
 

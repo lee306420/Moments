@@ -8,11 +8,56 @@ import '../services/settings_service.dart';
 import '../services/data_path_service.dart';
 import '../services/path_manager.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+import 'package:flutter/material.dart';
 
 class ImageUtils {
   static final ImagePicker _picker = ImagePicker();
   static final SettingsService _settingsService = SettingsService();
   static final DataPathService _dataPathService = DataPathService();
+
+  // 使用微信风格选择器选择多张图片
+  static Future<List<File>> pickImagesWithWechat(BuildContext context,
+      {int maxAssets = 9}) async {
+    final List<AssetEntity>? result = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: AssetPickerConfig(
+        maxAssets: maxAssets,
+        requestType: RequestType.image,
+      ),
+    );
+
+    if (result == null || result.isEmpty) {
+      return [];
+    }
+
+    List<File> files = [];
+    for (var asset in result) {
+      final file = await asset.file;
+      if (file != null) {
+        files.add(file);
+      }
+    }
+
+    return files;
+  }
+
+  // 使用微信风格选择器选择视频
+  static Future<File?> pickVideoWithWechat(BuildContext context) async {
+    final List<AssetEntity>? result = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: const AssetPickerConfig(
+        maxAssets: 1,
+        requestType: RequestType.video,
+      ),
+    );
+
+    if (result == null || result.isEmpty) {
+      return null;
+    }
+
+    return await result.first.file;
+  }
 
   // 从相册选择多张图片
   static Future<List<File>> pickImages() async {
